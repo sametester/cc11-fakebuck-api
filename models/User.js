@@ -5,24 +5,85 @@ module.exports = (sequelize, DataTypes) => {
       firstName: {
         type: DataTypes.STRING,
         allowNull: false,
-      },
-      email: {
-        type: DataTypes.STRING,
         validate: {
-          isEmail: true,
+          notEmpty: true,
         },
       },
-      phoneNumber: DataTypes.STRING,
-      passWord: {
+
+      lastName: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+          notEmpty: true,
+        },
+      },
+
+      email: {
+        type: DataTypes.STRING,
+        unique: true,
+        validate: {
+          isEmail: false,
+        },
+      },
+
+      phoneNumber: {
+        type: DataTypes.STRING,
+        unique: true,
+      },
+
+      password: {
         type: DataTypes.STRING,
         allowNull: false,
       },
+
       profilePic: DataTypes.STRING,
       coverPhoto: DataTypes.STRING,
     },
+
     {
       underscored: true,
     }
   );
+
+  User.associate = models => {
+    User.hasMany(models.Post, {
+      foreignKey: {
+        name: 'userId',
+        allowNull: false,
+      },
+      onUpdate: 'RESTRICT',
+      onDelete: 'RESTRICT',
+    });
+
+    User.hasMany(models.Like, {
+      foreignKey: {
+        name: 'userId',
+        allowNull: false,
+      },
+      onUpdate: 'RESTRICT',
+      onDelete: 'RESTRICT',
+    });
+
+    User.hasMany(models.Friend, {
+      as: 'RequestFrom',
+      foreignKey: {
+        name: 'requestFromId',
+        allowNull: false,
+      },
+      onUpdate: 'RESTRICT',
+      onDelete: 'RESTRICT',
+    });
+
+    User.hasMany(models.Friend, {
+      as: 'RequestTo',
+      foreignKey: {
+        name: 'requestToId',
+        allowNull: false,
+      },
+      onUpdate: 'RESTRICT',
+      onDelete: 'RESTRICT',
+    });
+  };
+
   return User;
 };
