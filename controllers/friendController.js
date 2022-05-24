@@ -2,6 +2,7 @@ const { Op } = require('sequelize');
 const createError = require('../utils/createError');
 const { Friend } = require('../models');
 const { FRIEND_ACCEPTED, FRIEND_PENDING } = require('../config/constants');
+const { request } = require('express');
 
 exports.requestFriend = async (req, res, next) => {
   try {
@@ -34,6 +35,54 @@ exports.requestFriend = async (req, res, next) => {
       status: FRIEND_PENDING,
     });
     res.json({ friend });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.updateFriend = async (req, res, next) => {
+  try {
+    const { friendId } = req.params;
+    const friend = await Friend.findOne({
+      where: {
+        requestFromId,
+        status: FRIEND_PENDING,
+        requestToId: req.user.id,
+      },
+    });
+
+    if (!friend) {
+      createError('friend request not found', 400);
+    }
+
+    friend.status = FRIEND_ACCEPTED;
+    await friend.save();
+    // await Friend.update({ status : FRIEND_ACCEPTED}, {where: {id: } })
+    res.json({ message: 'friend request accepted' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.deleteFriend = async (req, res, next) => {
+  try {
+    const { friendId } = req.params;
+
+    const friend = await Friend.findOne({ where: { id } });
+
+    if (!friend) {
+      createError('friend request not found', 400);
+    }
+
+    if (
+      friend.requestFromId !== request.user.id &&
+      friend.requestToId !== req.user.id
+    ) {
+      createError('you have no permission', 403);
+    }
+
+    await friend.destroy();
+    res.status(204).json();
   } catch (err) {
     next(err);
   }
