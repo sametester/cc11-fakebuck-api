@@ -1,25 +1,39 @@
 const { Op } = require('sequelize');
 const { Friend, User } = require('../models');
-const { FRIEND_ACCEPTED } = require('../config/constants');
+const { FRIEND_ACCEPTED, FRIEND_PENDING } = require('../config/constants');
 
-exports.findAcceptedFriend = async id => {
-  // WHERE (requestToId = 1 OR requestFromId = 1) AND status = 'ACCEPTED'
-  const friend = await Friend.findAll({
+exports.findFriendId = async id => {
+  const friends = await Friend.findAll({
     where: {
       [Op.or]: [{ requestToId: id }, { requestFromId: id }],
       status: FRIEND_ACCEPTED,
     },
   });
 
-  const friendIds = friend.map(el =>
+  const friendIds = friends.map(el =>
     el.requestToId === id ? el.requestFromId : el.requestToId
   );
 
-  // SELECT * FROM users WHERE id IN (3, 4)
+  return friendIds;
+};
+
+exports.findAcceptedFriend = async id => {
+  const friends = await Friend.findAll({
+    where: {
+      [Op.or]: [{ requestToId: id }, { requestFromId: id }],
+      status: FRIEND_ACCEPTED,
+    },
+  });
+
+  const friendIds = friends.map(el =>
+    el.requestToId === id ? el.requestFromId : el.requestToId
+  );
+
   const users = await User.findAll({
     where: { id: friendIds },
     attributes: { exclude: ['password'] },
   });
+
   return users;
 };
 
@@ -37,40 +51,43 @@ exports.findPendingFriend = async id => {
       },
     },
   });
-  return friend.map(el => el.requestFrom);
+  return friends.map(el => el.RequestFrom);
 };
 
-// exports.findPendingFriend = async id => {
-//     const friends = await Friend.findAll({
-//       where: {
-//         requestToId: id,
-//         status: FRIEND_PENDING,
-//       },
-//       include: {
-//         model: User,
-//         as: 'RequestFrom',
-//         attributes: {
-//           exclude: ['password'],
-//         },
-//       },
-//     });
-//     return friend.map(el => el.RequestTo);
-//   };
+exports.findRequestFriend = async id => {
+  const friends = await Friend.findAll({
+    where: {
+      requestFromId: id,
+      status: FRIEND_PENDING,
+    },
+    include: {
+      model: User,
+      as: 'RequestTo',
+      attributes: {
+        exclude: ['password'],
+      },
+    },
+  });
+  return friends.map(el => el.RequestTo);
+};
 
 exports.findUnknown = async id => {
-  const friend = await Friend.findAll({
+  const friends = await Friend.findAll({
     where: {
       [Op.or]: [{ requestToId: id }, { requestFromId: id }],
     },
   });
 
-  const friendIds = friend.map(el =>
+  const friendIds = friends.map(el =>
     el.requestToId === id ? el.requestFromId : el.requestToId
   );
+
+  friendIds.push(id);
 
   const users = await User.findAll({
     where: { id: { [Op.notIn]: friendIds } },
     attributes: { exclude: ['password'] },
   });
+
   return users;
 };

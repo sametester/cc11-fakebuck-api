@@ -9,7 +9,6 @@ module.exports = (sequelize, DataTypes) => {
           notEmpty: true,
         },
       },
-
       lastName: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -17,29 +16,24 @@ module.exports = (sequelize, DataTypes) => {
           notEmpty: true,
         },
       },
-
       email: {
         type: DataTypes.STRING,
         unique: true,
         validate: {
-          isEmail: false,
+          isEmail: true,
         },
       },
-
       phoneNumber: {
         type: DataTypes.STRING,
         unique: true,
       },
-
       password: {
         type: DataTypes.STRING,
         allowNull: false,
       },
-
       profilePic: DataTypes.STRING,
       coverPhoto: DataTypes.STRING,
     },
-
     {
       underscored: true,
     }
@@ -47,6 +41,15 @@ module.exports = (sequelize, DataTypes) => {
 
   User.associate = models => {
     User.hasMany(models.Post, {
+      foreignKey: {
+        name: 'userId',
+        allowNull: false,
+      },
+      onUpdate: 'RESTRICT',
+      onDelete: 'RESTRICT',
+    });
+
+    User.hasMany(models.Comment, {
       foreignKey: {
         name: 'userId',
         allowNull: false,

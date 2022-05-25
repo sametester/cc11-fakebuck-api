@@ -1,8 +1,6 @@
 const fs = require('fs');
 const { User } = require('../models');
 const FriendService = require('../services/friendService');
-
-const cloudinary = require('../utils/cloudinary');
 const cloudinary = require('../utils/cloudinary');
 const createError = require('../utils/createError');
 
@@ -24,8 +22,8 @@ exports.updateProfile = async (req, res, next) => {
     if (req.files.profilePic) {
       const result = await cloudinary.upload(req.files.profilePic[0].path);
       if (req.user.profilePic) {
-        const splitted = req.user.profilePic.split('/');
-        const publicId = splitted[splitted.length - 1].split('.'[0]);
+        const splited = req.user.profilePic.split('/');
+        const publicId = splited[splited.length - 1].split('.')[0];
         await cloudinary.destroy(publicId);
       }
       updateValue.profilePic = result.secure_url;
@@ -33,10 +31,12 @@ exports.updateProfile = async (req, res, next) => {
 
     if (req.files.coverPhoto) {
       const result = await cloudinary.upload(req.files.coverPhoto[0].path);
+      if (req.user.coverPhoto) {
+        const splited = req.user.coverPhoto.split('/');
+        const publicId = splited[splited.length - 1].split('.')[0];
+        await cloudinary.destroy(publicId);
+      }
       updateValue.coverPhoto = result.secure_url;
-    }
-    if (req.files.coverPhoto) {
-      const result = await cloudinary.upload(req.files.coverPhoto[0].path);
     }
 
     await User.update(updateValue, { where: { id: req.user.id } });

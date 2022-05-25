@@ -1,37 +1,26 @@
 const { Op } = require('sequelize');
 const createError = require('../utils/createError');
-const { Friend, User } = require('../models');
+const { Friend } = require('../models');
 const { FRIEND_ACCEPTED, FRIEND_PENDING } = require('../config/constants');
 const FriendService = require('../services/friendService');
-
-const { request } = require('express');
 
 exports.getAllFriend = async (req, res, next) => {
   try {
     const { status } = req.query;
     let users = [];
-    if (status.toUpperCase() === 'UNKNOWN') {
-      //* FIND UNKNOWN
+    if (status?.toUpperCase() === 'UNKNOWN') {
+      // **** FIND UNKNOWN
       users = await FriendService.findUnknown(req.user.id);
-    } else if (status.toUpperCase() === 'PENDING') {
-      //*** FIND PENDING FRIEND
+    } else if (status?.toUpperCase() === 'PENDING') {
+      // **** FIND PENDING FRIEND
       users = await FriendService.findPendingFriend(req.user.id);
-    } else if (status.toUpperCase() === 'REQUESTED') {
-      //*** FIND REQUESTED FRIEND
+    } else if (status?.toUpperCase() === 'REQUESTED') {
+      // *** FIND REQUESTED FRIEND
       users = await FriendService.findRequestFriend(req.user.id);
     } else {
-      //*** FIND ACCEPTED FRIEND
+      // *** FIND ACCEPTED FRIEND
       users = await FriendService.findAcceptedFriend(req.user.id);
     }
-
-    // **** FIND ACCEPTED FRIEND
-    // const users = await FriendService.friendAcceptedFriend(req.user.id);
-
-    // FIND PENDING FRIEND
-    // const users = await FriendService.friendAcceptedFriend(req.user.id);
-
-    //***FIND UNKNOWN
-    // const users = await FriendService.friendAcceptedFriend(req.user.id);
 
     res.json({ users });
   } catch (err) {
@@ -42,15 +31,10 @@ exports.getAllFriend = async (req, res, next) => {
 exports.requestFriend = async (req, res, next) => {
   try {
     const { requestToId } = req.body;
-    // console.log(req.user);
 
     if (req.user.id === +requestToId) {
       createError('cannot request yourself', 400);
     }
-
-    // req.user.id Phukao, requestToId Toro
-    // requestFromId = Phukao AND requestToId =Toro OR
-    // requestToId = Phukao AND requestFromId = Toro
 
     const existFriend = await Friend.findOne({
       where: {
@@ -78,12 +62,12 @@ exports.requestFriend = async (req, res, next) => {
 
 exports.updateFriend = async (req, res, next) => {
   try {
-    const { friendId } = req.params;
+    const { requestFromId } = req.params;
     const friend = await Friend.findOne({
       where: {
         requestFromId,
-        status: FRIEND_PENDING,
         requestToId: req.user.id,
+        status: FRIEND_PENDING,
       },
     });
 
@@ -93,7 +77,7 @@ exports.updateFriend = async (req, res, next) => {
 
     friend.status = FRIEND_ACCEPTED;
     await friend.save();
-    // await Friend.update({ status : FRIEND_ACCEPTED}, {where: {id: } })
+    // await Friend.update({ status: FRIEND_ACCEPTED }, { where: { id: friend.id } })
     res.json({ message: 'friend request accepted' });
   } catch (err) {
     next(err);
@@ -102,7 +86,7 @@ exports.updateFriend = async (req, res, next) => {
 
 exports.deleteFriend = async (req, res, next) => {
   try {
-    const { friendId } = req.params;
+    const { id } = req.params;
 
     const friend = await Friend.findOne({ where: { id } });
 
@@ -111,7 +95,7 @@ exports.deleteFriend = async (req, res, next) => {
     }
 
     if (
-      friend.requestFromId !== request.user.id &&
+      friend.requestFromId !== req.user.id &&
       friend.requestToId !== req.user.id
     ) {
       createError('you have no permission', 403);

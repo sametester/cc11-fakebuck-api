@@ -6,7 +6,9 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: false,
         validate: {
-          notEmpty: true,
+          notEmpty: {
+            msg: 'title must not empty',
+          },
         },
       },
     },
@@ -34,5 +36,6 @@ module.exports = (sequelize, DataTypes) => {
       onDelete: 'RESTRICT',
     });
   };
+
   return Comment;
 };

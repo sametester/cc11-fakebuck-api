@@ -7,12 +7,9 @@ const authRouter = require('./routes/authRoute');
 const userRouter = require('./routes/userRoute');
 const friendRouter = require('./routes/friendRoute');
 const postRouter = require('./routes/postRoute');
-const authenticate = require('./middleware/authenticate');
-const notFoundMiddleware = require('./middleware/notFound');
-const errorMiddleware = require('./middleware/error');
-
-// const { sequelize } = require('./models');
-// sequelize.sync({ force: true });
+const authenticate = require('./middlewares/authenticate');
+const notFoundMiddleware = require('./middlewares/notFound');
+const errorMiddleware = require('./middlewares/error');
 
 const app = express();
 app.use(cors());
@@ -33,4 +30,4 @@ app.use(notFoundMiddleware);
 app.use(errorMiddleware);
 
 const port = process.env.PORT || 8000;
-app.listen(port, () => console.log(`Server run on port ${port}`));
+app.listen(port, () => console.log('server running on port: ' + port));
