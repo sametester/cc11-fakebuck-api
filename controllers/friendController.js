@@ -1,13 +1,49 @@
 const { Op } = require('sequelize');
 const createError = require('../utils/createError');
-const { Friend } = require('../models');
+const { Friend, User } = require('../models');
 const { FRIEND_ACCEPTED, FRIEND_PENDING } = require('../config/constants');
+const FriendService = require('../services/friendService');
+
 const { request } = require('express');
+
+exports.getAllFriend = async (req, res, next) => {
+  try {
+    const { status } = req.query;
+    let users = [];
+    if (status.toUpperCase() === 'UNKNOWN') {
+      //* FIND UNKNOWN
+      users = await FriendService.findUnknown(req.user.id);
+    } else if (status.toUpperCase() === 'PENDING') {
+      //*** FIND PENDING FRIEND
+      users = await FriendService.findPendingFriend(req.user.id);
+    } else if (status.toUpperCase() === 'REQUESTED') {
+      //*** FIND REQUESTED FRIEND
+      users = await FriendService.findRequestFriend(req.user.id);
+    } else {
+      //*** FIND ACCEPTED FRIEND
+      users = await FriendService.findAcceptedFriend(req.user.id);
+    }
+
+    // **** FIND ACCEPTED FRIEND
+    // const users = await FriendService.friendAcceptedFriend(req.user.id);
+
+    // FIND PENDING FRIEND
+    // const users = await FriendService.friendAcceptedFriend(req.user.id);
+
+    //***FIND UNKNOWN
+    // const users = await FriendService.friendAcceptedFriend(req.user.id);
+
+    res.json({ users });
+  } catch (err) {
+    next(err);
+  }
+};
 
 exports.requestFriend = async (req, res, next) => {
   try {
     const { requestToId } = req.body;
-    console.log(req.user);
+    // console.log(req.user);
+
     if (req.user.id === +requestToId) {
       createError('cannot request yourself', 400);
     }
